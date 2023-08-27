@@ -28,3 +28,6 @@ jobs:
         run: |
           go mod tidy
           go test -v ./...
+      - name: Check for test file changes
+        run: |
+          git diff --exit-code test_commands
