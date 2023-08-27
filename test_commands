@@ -1,0 +1,24 @@
+echo foo > foo_file
+mkdir bar
+mv foo_file bar
+echo baz12345 > bar/baz_file
+sed 's/123//' -i bar/baz_file
+echo buzz >> bar/baz_file
+ln bar/baz_file bar/baaz_file
+mv bar/baz_file bar/foo_file
+rm bar/foo_file
+rm -rf bar
+mkdir dir
+touch dir/file
+mkfifo dir/fifo
+ln dir/file dir/hardlink
+ln -s file dir/symlink
+mv dir/hardlink dir/hardlink.rn
+mv dir/symlink dir/symlink.rn
+mv dir/fifo dir/fifo.rn
+echo todel > dir/file_to_del
+mkdir -p dir/subdir/leafdir
+echo yep > dir/subdir/yep
+echo leaf > dir/subdir/leafdir/leaf
+mv dir topdir
+rm -rf topdir
