@@ -22,3 +22,4 @@ echo yep > dir/subdir/yep
 echo leaf > dir/subdir/leafdir/leaf
 mv dir topdir
 rm -rf topdir
+z
