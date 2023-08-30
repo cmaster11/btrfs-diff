@@ -10,7 +10,10 @@ It only supports snapshot diff files generated with
 
 ```
 sudo btrfs send -p PARENT_SNAPSHOT NEW_SNAPSHOT > DIFF_FILE
+sudo btrfs send --no-data -p PARENT_SNAPSHOT NEW_SNAPSHOT > DIFF_FILE
 ```
+
+**Note:** `btrfs-diff` does not support processing clone operations. I have been lazy.
 
 ## Usage
 

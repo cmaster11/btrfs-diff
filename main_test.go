@@ -87,44 +87,46 @@ func TestDiff(t *testing.T) {
 		require.NoError(t, os.WriteFile(testCommandsFile, []byte(strings.Join(ss, "\n")+"\n"), 0644))
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%s", test.Command), func(t *testing.T) {
-			snapFile := fmt.Sprintf("%s/inc-%03d.snap", testDir, idx+1)
-			diff, err := pkg.ProcessFile(snapFile)
-			require.NoError(t, err)
+	for _, prefix := range []string{"inc", "inc-no-data"} {
+		for idx, test := range tests {
+			t.Run(fmt.Sprintf("%s-%s", prefix, test.Command), func(t *testing.T) {
+				snapFile := fmt.Sprintf("%s/%s-%03d.snap", testDir, prefix, idx+1)
+				diff, err := pkg.ProcessFile(snapFile)
+				require.NoError(t, err)
 
-			diffStr := diff.GetDiffStruct(nil)
-			printExpect(diffStr)
+				diffStr := diff.GetDiffStruct(nil)
+				printExpect(diffStr)
 
-			require.NotEmpty(t, test.Expect)
+				require.NotEmpty(t, test.Expect)
 
-			matchedCount := 0
-			for _, exp := range test.Expect {
-				var testDest []*pkg.DiffNode
-				switch exp.Type {
-				case ETypeCreated:
-					testDest = diffStr.Added
-				case ETypeModified:
-					testDest = diffStr.Changed
-				case ETypeDeleted:
-					testDest = diffStr.Deleted
-				}
-
-				found := false
-
-				for _, entry := range testDest {
-					if exp.Path == entry.GetChainPath() {
-						found = true
-						matchedCount++
+				matchedCount := 0
+				for _, exp := range test.Expect {
+					var testDest []*pkg.DiffNode
+					switch exp.Type {
+					case ETypeCreated:
+						testDest = diffStr.Added
+					case ETypeModified:
+						testDest = diffStr.Changed
+					case ETypeDeleted:
+						testDest = diffStr.Deleted
 					}
+
+					found := false
+
+					for _, entry := range testDest {
+						if exp.Path == entry.GetChainPath() {
+							found = true
+							matchedCount++
+						}
+					}
+
+					require.True(t, found)
 				}
 
-				require.True(t, found)
-			}
-
-			// We make sure that all entries are tested
-			require.EqualValues(t, len(diffStr.Added)+len(diffStr.Changed)+len(diffStr.Deleted), matchedCount)
-		})
+				// We make sure that all entries are tested
+				require.EqualValues(t, len(diffStr.Added)+len(diffStr.Changed)+len(diffStr.Deleted), matchedCount)
+			})
+		}
 	}
 
 }
