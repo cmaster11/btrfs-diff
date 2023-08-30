@@ -42,6 +42,7 @@ while read -r command; do
 
     # sudo btrfs send -p "$FS_SNAP_DIR"/000 "$FS_SNAP_DIR/$SNAP_NAME" > "$TEST_DATA_DIR/full-$SNAP_NAME.snap"
     sudo btrfs send -p "$FS_SNAP_DIR/$PREV_SNAP_NAME" "$FS_SNAP_DIR/$SNAP_NAME" > "$TEST_DATA_DIR/inc-$SNAP_NAME.snap"
+    sudo btrfs send --no-data -p "$FS_SNAP_DIR/$PREV_SNAP_NAME" "$FS_SNAP_DIR/$SNAP_NAME" > "$TEST_DATA_DIR/inc-no-data-$SNAP_NAME.snap"
 
     echo "$I: $command" >&2
     I=$((I + 1))

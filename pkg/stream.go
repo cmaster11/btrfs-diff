@@ -226,6 +226,8 @@ func ProcessBTRFSStream(stream *os.File) (*Diff, error) {
 
 			case BTRFS_SEND_C_WRITE:
 				fallthrough
+			case BTRFS_SEND_C_UPDATE_EXTENT:
+				fallthrough
 			case BTRFS_SEND_C_TRUNCATE:
 				fallthrough
 			case BTRFS_SEND_C_CHMOD:
@@ -486,6 +488,34 @@ func (d *Diff) processModify(path string, command *commandInst) error {
 		node.lastDataWrittenOffset = offset.(uint64)
 		node.lastDataWrittenLen = dataLen
 		info("modified: write at %s at %v: %s", path, offset, sentData)
+	case BTRFS_SEND_C_UPDATE_EXTENT:
+		offset, err := command.ReadParam(BTRFS_SEND_A_FILE_OFFSET)
+		if err != nil {
+			return errors.Wrap(err, "failed to read write offset param")
+		}
+		size, err := command.ReadParam(BTRFS_SEND_A_SIZE)
+		if err != nil {
+			return errors.Wrap(err, "failed to read written size param")
+		}
+
+		dataLen := size.(uint64)
+		if len(node.Changes) > 0 {
+			lastChange := node.Changes[len(node.Changes)-1]
+			// Concat multiple writes
+			if strings.HasPrefix(lastChange, "write") && node.lastDataWrittenOffset+node.lastDataWrittenLen == offset {
+				node.Changes = node.Changes[:len(node.Changes)-1]
+				offset = node.lastDataWrittenOffset
+				dataLen = dataLen + node.lastDataWrittenLen
+			}
+		}
+
+		if node.NodeType == DiffNodeTypeUnknown {
+			node.NodeType = DiffNodeTypeFile
+		}
+		node.Changes = append(node.Changes, fmt.Sprintf("write:offset=%d:data_len=%d", offset, dataLen))
+		node.lastDataWrittenOffset = offset.(uint64)
+		node.lastDataWrittenLen = dataLen
+		info("modified: write (extent) at %s at %v", path, offset)
 	case BTRFS_SEND_C_TRUNCATE:
 		size, err := command.ReadParam(BTRFS_SEND_A_SIZE)
 		if err != nil {
